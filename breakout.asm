@@ -12,8 +12,8 @@
 	screenHeight: 	.word 64			#
 	barX: 		.word 31			#
 	barY:		.word 31			#
-	maxPixels:	.word 2944			#
-							#
+	#maxPixels:	.word 2944			#
+	maxPixels:	.word 4096						#
 ########### Frame Colors ################################
 							#
 	backgroundColor:.word	0x000000   # black 	#
@@ -91,7 +91,7 @@ j FillBackgroundLoop
 	
 ################ Pallet implementation #########################################
 
-##### memoria maxima 2944
+##### memoria maxima 2944 ####################################################
 	
 	
 	la $a0, 0($gp)
@@ -117,6 +117,48 @@ j FillBackgroundLoop
 	
 	jal buildPallet	
 	nop
+
+################ move pallet ####################################################
+	li $t5, 1 # keep 1 to be used as a infinite looping
+	
+	li $t3, 97
+	li $t4, 100
+	
+	lw $t6, backgroundColor
+	lw $t7, palletColor
+	
+	la $a0, 0($gp)
+	lw $t1, maxPixels 
+	sub $t1, $t1, 35   	     	
+	mul $t1, $t1, 4	    
+	add $a0, $a0, $t1 
+	la $a1, 0($a0)
+	addi $a1, $a1, 32
+	
+	la $t8, 0($gp)
+	lw $t1, maxPixels 
+	sub $t1, $t1, 99   	     	
+	mul $t1, $t1, 4	    
+	add $t8, $t8, $t1 
+	la $t9, 0($t8)
+	addi $t9, $t9, 32
+	
+	# $a0 to $a1 keep beggining and end of first paddle layer
+	# $t8 to $t9 keep beggining and end of last paddle layer
+	
+	loop:
+	
+	sw $zero, 0xFFFF0004
+	
+	jal getDir
+	nop
+	
+	jal movePallet
+	nop
+	
+	bne $zero, $t5, loop
+	
+	
 	
 	
 ########## Syscall to finish program before enter in the jal functions #########
@@ -213,4 +255,60 @@ buildPallet:
 	fimPallet:
 	jr $ra
 	nop
+
+  #####################################
+ #  Function that moves the pallet   #
+#####################################
+.globl movePallet
+movePallet:
+	#  ----> ASCII 97 == a in $t3 |||| 100 == d  in $t4 <----  #
+	
+	# $a0 to $a1 keep beggining and end of first paddle layer
+	# $t8 to $t9 keep beggining and end of last paddle layer
+	# $t6 the backgroud and $t7 has the collor of ballet
+	
+	bne $t0, $t3, toD
+	nop
+	
+	sw $t6, 0($a1)
+	subi $a1, $a1, 4
+  	
+  	subi $a0, $a0, 4
+  	sw $t7, 0($a0)
+  	
+  	sw $t6, 0($t9)
+	subi $t9, $t9, 4
+  	
+  	subi $t8, $t8, 4
+  	sw $t7, 0($t8)
+  	
+  	jr $ra
+  	nop
+  	toD:
+  	bne $t0, $t4, fimMove
+  	nop
+  	addi $a1, $a1, 4
+	sw $t7, 0($a1)
+	
+  	sw $t6, 0($a0)
+  	addi $a0, $a0, 4
+  	
+  	addi $t9, $t9, 4
+	sw $t7, 0($t9)
+	
+  	sw $t6, 0($t8)
+  	addi $t8, $t8, 4
+  	  	
+  	fimMove:
+  	jr $ra
+  	nop
+  	
+  	
+
+.globl getDir	
+getDir:
+	lw $t0, 0xFFFF0004
+	jr $ra
+	nop
+		
 
