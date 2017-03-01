@@ -40,7 +40,6 @@
 	mul $a2, $a2, 4 #endereços 
 	la $a2, ($gp) #add base of gp
 	add $a0, $gp, $zero #contador do loop
-	
 FillBackgroundLoop:
 	
 	beq $a0, $a2, Init #end condition, se a largura da tela for igual 
