@@ -29,10 +29,16 @@
 	blue: 	.word 0x0095FF	# Blue Bricks		#
 							#
 ########## BALL ATRIBUTES ###############################
-	ballColor: .word 0xFFFFFF #white			#
-	position: .word 8320 #initialized with first position	#	
-	direction: .word 1	#initialized to go down		#
-###################################################
+							#
+	ballColor: .word 0xFFFFFF # white		#
+	iniPosition: .word 15744  # over the bar	#
+	position: .word 15744 	  # change over time	#
+	direction: .word 1	  # up			#
+							#
+#Vitor comment simpler please or the code gets messy    #
+# and dirty						#
+							#
+#########################################################
 
 .text
 	.globl main
@@ -96,7 +102,6 @@ j FillBackgroundLoop
 	
 ################ Pallet implementation #########################################
 
-##### memoria maxima 2944 ####################################################
 	
 	
 	la $a0, 0($gp)
@@ -124,7 +129,7 @@ j FillBackgroundLoop
 	nop
 
 ##########initialize ball ############################
-	lw $a0, position
+	lw $a0, iniPosition
 	add $a0, $a0, $gp
 	sw $a0, position
 	lw $a1, position # out of display range
@@ -160,10 +165,13 @@ j FillBackgroundLoop
 	# $a0 ball position
 	# $a1 ball direction
 	loop:
+	
 	lw $a0, position
 	lw $a1, direction
+	
 	jal moveBall
 	nop
+	
 	sw $zero, 0xFFFF0004
 	
 	jal getDir
@@ -173,6 +181,7 @@ j FillBackgroundLoop
 	nop
 	
 	bne $zero, $t5, loop
+	nop
 	
 	
 	
@@ -261,7 +270,7 @@ blueBricks:
 #####################################
 .globl buildPallet
 buildPallet:
-
+	
 	beq $a0, $a1, fimPallet
 	nop
 	sw $t0, 0($a0) 
@@ -346,19 +355,73 @@ samePos:
 endDrawBall:
 	jr $ra
 	nop
-######## move ball ###############
-# $a0 ball position #
-# $a1 direction#
-# $a1 = 0 = down #
-#####################################
+######## move ball######################
+# $a0 ball position 		      #
+# $a1 direction		             #
+# $a1 = 0 = down #		    #
+####################################
 moveBall:
 	subi $sp, $sp, 4
 	sw $ra, 0($sp)
-	beq $a1, 1, down 
+	
+	beq $a1, 1, up 
 	nop
+	
+	beq $a1, 0, down
+	nop
+	
 	j ballMoved
 	nop
-down: 	
+up: 	
+	
+	subi $s0, $a0, 256 #get next up dot
+	or $s2, $zero, $s0
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	bne $s0, $s1,  fimUp
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	subi $a0, $a0, 256 #set $a0 to draw position
+	
+	sw $a0, position
+	jal delay
+	nop
+	jal drawBall
+	nop
+	
+	
+	j ballMoved
+	nop
+	
+	fimUp:
+	
+	sw $zero, direction
+	
+	lw $s3, palletColor
+	
+	beq $s0,  $s3, keepU
+	nop
+	
+	jal delDot
+	nop
+	
+	keepU:
+	
+	j ballMoved
+	nop
+	
+down:	
+	
+	addi $s0, $a0, 256 #get next up dot
+	or $s2, $zero, $s0
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	bne $s0, $s1,  fimDown
+	nop 	
+	 	
 	move $a1, $a0 #set $a1 to clear position
 	addi $a0, $a0, 256 #set $a0 to draw position
 	sw $a0, position
@@ -366,6 +429,21 @@ down:
 	nop
 	jal drawBall
 	nop
+	j ballMoved
+	nop
+	
+	fimDown:
+	
+	sw $t5, direction
+	
+	lw $s3, palletColor
+	
+	beq $s0,  $s3, keepD
+	nop
+	jal delDot
+	nop
+	
+	keepD:
 	j ballMoved
 	nop
 	
@@ -377,11 +455,19 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 250, endDelay
+delayLoop:	beq $t1, 60, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
 		nop
 endDelay: 	jr $ra
 		nop
-##########################
+
+#### erase func #############
+delDot:
+		
+	sw $s1, 0($s2)
+	jr $ra
+	nop
+
+
