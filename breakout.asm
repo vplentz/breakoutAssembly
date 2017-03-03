@@ -13,8 +13,8 @@
 	barX: 		.word 31			#
 	barY:		.word 31			#
 	#maxPixels:	.word 2944			#
-	maxPixels:	.word 4096						#
-########### Frame Colors ################################
+	maxPixels:	.word 4096			#
+########### Frame Properities  ##########################
 							#
 	backgroundColor:.word	0x000000   # black 	#
 	borderColor:    .word	0xA9A9A9   # grey	#
@@ -35,16 +35,21 @@
 	position: .word 15744 	  # change over time	#
 	direction: .word 1	  # up			#
 							#
-#Vitor comment simpler please or the code gets messy    #
-# and dirty						#
-							#
+############   PADDLE ATRIBUTES     #####################
+
+	l1Ini: .word 0
+	l1End: .word 0
+	l2Ini: .word 0
+	l2End: .word 0
+	
 #########################################################
+	
 
 .text
 	.globl main
 	main:
 	
-############### Desenha o background #########################
+############### Desenha o background ####################
 	lw $a0, screenWidth #carrega a largura da tela
 	lw $a1, backgroundColor #carrega a cor do fundo
 	mul $a2, $a0, $a0 #faz o total do numero de pixels da tela 
@@ -56,7 +61,7 @@ FillBackgroundLoop:
 	beq $a0, $a2, Init #end condition, se a largura da tela for igual 
 	nop
 	sw $a1, 0($a0) #salva cor no background
-	addiu $a0, $a0, 4 #incrementa contador
+	addi $a0, $a0, 4 #incrementa contador
 
 j FillBackgroundLoop
 	
@@ -64,10 +69,20 @@ j FillBackgroundLoop
 	nop
 
 ################ Bricks implementation ##############################
-
-	la $a0, 0($gp)  
+	
+	la $a0, 0($gp) 
+	lw $t0, palletColor  
+	li $a1, 64  
+	mul $a1, $a1, 4  
+	add $a1, $a1, $a0
+	jal redBricks
+	nop
+	
+	
+	la $a0, 0($gp)
+	addi $a0, $a0, 256 
 	lw $t0, red  
-	li $a1, 128  
+	li $a1, 192  
 	mul $a1, $a1, 4  
 	add $a1, $a1, $a0
 	jal redBricks
@@ -75,7 +90,7 @@ j FillBackgroundLoop
 	
 	la $a0, 0($gp) 
 	lw $t0, yellow  
-	li $a1, 128 
+	li $a1, 192 
 	mul $a1, $a1, 4
 	add $a0, $a0, $a1
 	add $a1, $a1, $a0
@@ -84,46 +99,54 @@ j FillBackgroundLoop
 	
 	la $a0, 0($gp) 
 	lw $t0, green  
-	li $a1, 256  
+	li $a1, 320  
 	mul $a1, $a1, 4
 	add $a0, $a0, $a1
-	addi $a1, $a0, 512  
+	addi $a1, $a0, 576  
 	jal greenBricks
 	nop
 	
 	la $a0, 0($gp) 
 	lw $t0, blue  
-	li $a1, 384  
+	li $a1, 448  
 	mul $a1, $a1, 4
 	add $a0, $a0, $a1
 	addi $a1, $a0, 512  
 	jal blueBricks
 	nop
 	
-################ Pallet implementation #########################################
-
+	#left bar
+	la $a0, 0($gp) # used the same func to make the bars 
+	lw $t0, palletColor  
+	li $a1, 4032 # left last dot vertical 
+	mul $a1, $a1, 4  
+	add $a1, $a1, $a0
+	jal barL
+	nop
 	
+	#right bar
+	la $a0, 0($gp) # used the same func to make the bars
+	addi $a0, $a0, 252
+	lw $t0, palletColor  
+	li $a1, 4095 # left last dot vertical 
+	mul $a1, $a1, 4  
+	add $a1, $a1, $gp
+	jal barR
+	nop
+
+################ Pallet implementation #########################################
 	
 	la $a0, 0($gp)
 	lw $t1, maxPixels 
 	sub $t1, $t1, 35   	     	
 	mul $t1, $t1, 4	    
 	add $a0, $a0, $t1 
-	la $a1, 0($a0)
-	addi $a1, $a1, 32
-	lw $t0, palletColor
+	or $a1, $zero, $a0
+	addi $a1, $a1, 20
 	
-	jal buildPallet	
-	nop
 	
-	la $a0, 0($gp)
-	lw $t1, maxPixels 
-	sub $t1, $t1, 99   	     	
-	mul $t1, $t1, 4	    
-	add $a0, $a0, $t1 
-	la $a1, 0($a0)
-	addi $a1, $a1, 32
-	lw $t0, palletColor
+	sw $a0, l2Ini
+	sw $a1, l2End
 	
 	jal buildPallet	
 	nop
@@ -135,35 +158,14 @@ j FillBackgroundLoop
 	lw $a1, position # out of display range
 	jal drawBall
 	nop
-################ move pallet ####################################################
+################ Main loop ####################################################
 	li $t5, 1 # keep 1 to be used as a infinite looping
-	
-	li $t3, 97
-	li $t4, 100
-	
-	lw $t6, backgroundColor
-	lw $t7, palletColor
-	
-	la $a0, 0($gp)
-	lw $t1, maxPixels 
-	sub $t1, $t1, 35   	     	
-	mul $t1, $t1, 4	    
-	add $a0, $a0, $t1 
-	la $a1, 0($a0)
-	addi $a1, $a1, 32
-	
-	la $t8, 0($gp)
-	lw $t1, maxPixels 
-	sub $t1, $t1, 99   	     	
-	mul $t1, $t1, 4	    
-	add $t8, $t8, $t1 
-	la $t9, 0($t8)
-	addi $t9, $t9, 32
 	
 	# $a0 to $a1 keep beggining and end of first paddle layer
 	# $t8 to $t9 keep beggining and end of last paddle layer
 	# $a0 ball position
 	# $a1 ball direction
+	
 	loop:
 	
 	lw $a0, position
@@ -171,14 +173,23 @@ j FillBackgroundLoop
 	
 	jal moveBall
 	nop
-	
-	sw $zero, 0xFFFF0004
-	
+		
 	jal getDir
 	nop
 	
+	lw $a0, l2Ini
+	lw $a1, l2End
+	
 	jal movePallet
 	nop
+	
+	sw $a0, l2Ini
+	sw $a1, l2End
+	
+	
+	
+	sw $zero, 0xFFFF0004
+	
 	
 	bne $zero, $t5, loop
 	nop
@@ -218,6 +229,35 @@ redBricks:
 	fimr:
 	jr $ra
 	nop
+	
+  ######################################
+ #  Function to print grey bars       #
+######################################
+.globl barL
+barL:
+	beq $a0, $a1, fimL
+	nop
+	sw $t0, 0($a0) 
+	addi $a0, $a0, 256
+	j barL
+	nop
+	fimL:
+	jr $ra
+	nop
+	
+.globl barR
+barR:
+	beq $a0, $a1, fimR
+	nop
+	sw $t0, 0($a0) 
+	addi $a0, $a0, 256
+	j barR
+	nop
+	fimR:
+	jr $ra
+	nop
+
+
 	
   #####################################
  #  Function to print yellow bricks  #
@@ -270,7 +310,7 @@ blueBricks:
 #####################################
 .globl buildPallet
 buildPallet:
-	
+	lw $t0, palletColor
 	beq $a0, $a1, fimPallet
 	nop
 	sw $t0, 0($a0) 
@@ -286,50 +326,46 @@ buildPallet:
 #####################################
 .globl movePallet
 movePallet:
-	#  ----> ASCII 97 == a in $t3 |||| 100 == d  in $t4 <----  #
 	
-	# $a0 to $a1 keep beggining and end of first paddle layer
-	# $t8 to $t9 keep beggining and end of last paddle layer
-	# $t6 the backgroud and $t7 has the collor of ballet
+	
+	#  ----> ASCII 97 == a in $t3 |||| 100 == d  in $t4 <----  #
+	li $t3, 97
+	li $t4, 100
+	
+	# Get bg and palletColor
+	lw $t6, backgroundColor
+	lw $t7, palletColor
+	
 	
 	bne $t0, $t3, toD
 	nop
 	
+	# $a0 to $a1, keep beggining and
+	# end of one of two paddle layers
 	sw $t6, 0($a1)
 	subi $a1, $a1, 4
   	
   	subi $a0, $a0, 4
-  	sw $t7, 0($a0)
-  	
-  	sw $t6, 0($t9)
-	subi $t9, $t9, 4
-  	
-  	subi $t8, $t8, 4
-  	sw $t7, 0($t8)
-  	
-  	jr $ra
+	sw $t7, 0($a0)
+	  	  	
+  	j fimMove
   	nop
+  	
   	toD:
   	bne $t0, $t4, fimMove
   	nop
   	addi $a1, $a1, 4
 	sw $t7, 0($a1)
-	
-  	sw $t6, 0($a0)
+	sw $t6, 0($a0)
   	addi $a0, $a0, 4
-  	
-  	addi $t9, $t9, 4
-	sw $t7, 0($t9)
-	
-  	sw $t6, 0($t8)
-  	addi $t8, $t8, 4
   	  	
   	fimMove:
   	jr $ra
   	nop
   	
   	
-
+  	
+######## getDir where paddle will be moved ###############
 .globl getDir	
 getDir:
 	lw $t0, 0xFFFF0004
@@ -455,7 +491,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 60, endDelay
+delayLoop:	beq $t1, 100, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
