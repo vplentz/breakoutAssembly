@@ -31,9 +31,10 @@
 ########## BALL ATRIBUTES ###############################
 							#
 	ballColor: .word 0xFFFFFF # white		#
-	iniPosition: .word 15744  # over the bar	#
-	position: .word 15744 	  # change over time	#
-	direction: .word 1	  # up			#
+	iniPosition: .word 16000  # over the bar	#
+	position: .word 16000 	  # change over time	#
+	direction: .word 2	  # up		
+	upAndDown: .word 1	#
 							#
 ############   PADDLE ATRIBUTES     #####################
 
@@ -64,7 +65,7 @@ FillBackgroundLoop:
 	addi $a0, $a0, 4 #incrementa contador
 
 j FillBackgroundLoop
-	
+nop
 	Init: #fim do desenho background
 	nop
 
@@ -158,7 +159,7 @@ j FillBackgroundLoop
 	lw $a1, position # out of display range
 	jal drawBall
 	nop
-################ Main loop ####################################################
+################ Main loop #########################################
 	li $t5, 1 # keep 1 to be used as a infinite looping
 	
 	# $a0 to $a1 keep beggining and end of first paddle layer
@@ -171,7 +172,7 @@ j FillBackgroundLoop
 	lw $a0, position
 	lw $a1, direction
 	
-	jal moveBall
+	jal altMvBall
 	nop
 		
 	jal getDir
@@ -410,6 +411,8 @@ moveBall:
 	nop
 up: 	
 	
+	
+	
 	subi $s0, $a0, 256 #get next up dot
 	or $s2, $zero, $s0
 	lw $s0, 0($s0)
@@ -491,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 100, endDelay
+delayLoop:	beq $t1, 1000, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -506,4 +509,189 @@ delDot:
 	jr $ra
 	nop
 
+#### Alternative move ball ########
 
+.globl altMvBall
+altMvBall:
+
+	subi $sp, $sp, 4
+	sw $ra, 0($sp)
+	
+	beq $a1, 1, trD 
+	nop
+	
+	beq $a1, 2, qcD
+	nop
+	
+	beq $a1, 3, ssD
+	nop
+	
+	beq $a1, -1, trE
+	nop
+	
+	beq $a1, -2, qcE
+	nop
+	
+	beq $a1, -3, ssE
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	trD:
+	nop
+	
+	qcD:
+	
+	lw $s7, upAndDown
+	
+	bne $s7, $zero, up_qcD
+	nop
+	li $t9, 256
+	j keep_qcD
+	nop
+	up_qcD:
+	li $t9, -256
+	keep_qcD:
+	
+	add $s0, $a0, $t9 #get next up dot
+	addi $s0, $s0, 4 #And get dir of up dot
+	or $s2, $zero, $s0
+	
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	bne $s0, $s1,  fim_qcD
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	add $a0, $a0, $t9 #set $a0 to draw position
+	addi $a0, $a0, 4
+	
+	sw $a0, position
+	jal delay
+	nop
+	
+	jal drawBall
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	fim_qcD:
+	
+	bne $s7, $zero, go_qcD
+	nop
+	
+	li $s7, 2
+	sw $s7, direction
+	li $s7, 1
+	sw $s7, upAndDown
+	j afterPallet
+	nop
+	go_qcD:	
+	
+	lw $s3, palletColor
+	
+	li $s7, -2
+	sw $s7, direction
+	
+	subi $s2, $s2, 4
+	
+	afterPallet:
+	
+	beq $s0,  $s3, AltBallMoved
+	nop
+	
+	jal delDot
+	nop
+	
+	li $s7, -2
+	sw $s7, direction
+	li $s7, 0
+	sw $s7, upAndDown
+	
+	
+	j AltBallMoved
+	nop
+	
+	ssD:
+	nop
+	
+	trE:
+	nop
+	
+	qcE:
+	
+	lw $s7, upAndDown
+	
+	bne $s7, $zero, up_qcE
+	nop
+	li $t9, 256
+	j keep_qcE
+	nop
+	up_qcE:
+	li $t9, -256
+	keep_qcE:
+	add $s0, $a0, $t9 #get next up dot
+	subi $s0, $s0, 4 #And get dir of up dot
+	or $s2, $zero, $s0
+	
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	
+	
+	bne $s0, $s1,  fim_qcE
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	add $a0, $a0, $t9 #set $a0 to draw position
+	subi $a0, $a0, 4
+	
+	sw $a0, position
+	jal delay
+	nop
+	
+	jal drawBall
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	fim_qcE:
+	
+	lw $s3, palletColor
+	
+	li $s7, 2
+	sw $s7, direction
+
+	addi $s2, $s2, 4
+			
+	beq $s0,  $s3, AltBallMoved
+	nop
+	
+
+	
+	jal delDot
+	nop
+	
+	li $s7, -2
+	sw $s7, direction
+	li $s7, 0
+	sw $s7, upAndDown
+	
+	
+	j AltBallMoved
+	nop
+	
+	ssE:
+	nop
+	
+	
+AltBallMoved:
+	lw $ra, 0($sp)
+	addi $sp, $sp ,4
+	jr $ra
+	nop
+		
