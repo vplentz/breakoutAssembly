@@ -494,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 1000, endDelay
+delayLoop:	beq $t1, 4000, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -503,14 +503,40 @@ endDelay: 	jr $ra
 		nop
 
 #### erase func #############
+#### $s2 current dot address###
+#### $s1 black##########
 delDot:
-		
-	sw $s1, 0($s2)
+	subi $sp, $sp, 4
+	sw $ra, 0($sp) #saving the current adress
+	move $a0, $s2 #set surroundings argument
+	jal surroundings
+	nop
+	sw $s1, 0($s2)	#turn current dot into black
+	lw $ra, 0($sp)
+	addi $sp, $sp ,4
 	jr $ra
 	nop
+	nop
 
+###### erase surroundings########
+# $a1 is the current adress#
+surroundings:
+	lw $t0, palletColor #load pallet color
+	lw $t1, backgroundColor #load background color
+	lw $t2, 4($a0)
+	lw $t3, -4($a0) #load dot surroundings
+	beq $t2, $t0, sameColor1
+	nop
+	sw  $t1, 4($a0) #stores black into right surrounding
+	sameColor1: beq $t3, $t0, sameColor2
+	nop
+	sw $t1, -4($a0) #stores black into left surrounding
+	sameColor2:jr $ra
+	nop
 #### Alternative move ball ########
-
+# $a0 position #
+# $a1 direction#
+#MARCO LOK VE SE BOTA OS ARGUMENTO DIREITO#
 .globl altMvBall
 altMvBall:
 
@@ -545,23 +571,23 @@ altMvBall:
 	
 	lw $s7, upAndDown
 	
-	bne $s7, $zero, up_qcD
+	bne $s7, $zero, up_qcD #upward
 	nop
-	li $t9, 256
-	j keep_qcD
+	li $t9, 256 #down
+	j keep_qcD 
 	nop
 	up_qcD:
-	li $t9, -256
+	li $t9, -256 # up
 	keep_qcD:
 	
-	add $s0, $a0, $t9 #get next up dot
+	add $s0, $a0, $t9 #get next  dot up/down
 	addi $s0, $s0, 4 #And get dir of up dot
 	or $s2, $zero, $s0
 	
-	lw $s0, 0($s0)
+	lw $s0, 0($s0) #loads  $s0 with the next color
 	lw $s1, backgroundColor
 	
-	bne $s0, $s1,  fim_qcD
+	bne $s0, $s1,  fim_qcD # if $s0 color its not black
 	nop
 		
 	move $a1, $a0 #set $a1 to clear position
@@ -578,29 +604,28 @@ altMvBall:
 	j AltBallMoved
 	nop
 	
-	fim_qcD:
+	fim_qcD: #color is not black
 	
-	bne $s7, $zero, go_qcD
-	nop
+	bne $s7, $zero, go_qcD #if direction its up
+	nop#is down
 	
-	li $s7, 2
+	li $s7, 2 #direction goes to 40 right
 	sw $s7, direction
-	li $s7, 1
-	sw $s7, upAndDown
+	li $s7, 1 
+	sw $s7, upAndDown #sets to go up
 	j afterPallet
 	nop
-	go_qcD:	
+	go_qcD:	#is up
 	
 	lw $s3, palletColor
-	
-	li $s7, -2
-	sw $s7, direction
+	li $s7, -2 
+	sw $s7, direction #sets to goes 40 left
 	
 	subi $s2, $s2, 4
 	
 	afterPallet:
 	
-	beq $s0,  $s3, AltBallMoved
+	beq $s0,  $s3, AltBallMoved #if next  dot up/down == palletColor
 	nop
 	
 	jal delDot
@@ -642,7 +667,7 @@ altMvBall:
 	
 	
 	
-	bne $s0, $s1,  fim_qcE
+	bne $s0, $s1,  fim_qcE #if next dot != black
 	nop
 		
 	move $a1, $a0 #set $a1 to clear position
@@ -655,11 +680,12 @@ altMvBall:
 	
 	jal drawBall
 	nop
+
 	
 	j AltBallMoved
 	nop
 	
-	fim_qcE:
+	fim_qcE: #next != black
 	
 	lw $s3, palletColor
 	
@@ -668,7 +694,7 @@ altMvBall:
 
 	addi $s2, $s2, 4
 			
-	beq $s0,  $s3, AltBallMoved
+	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
 	nop
 	
 
