@@ -33,9 +33,9 @@
 	ballColor: .word 0xFFFFFF # white		#
 	iniPosition: .word 16000  # over the bar	#
 	position: .word 16000 	  # change over time	#
-	direction: .word 2	  # up		
-	upAndDown: .word 1	#
-							#
+	direction: .word 4	  # up			#
+	upAndDown: .word 1				#
+	paddleColision: .word 0				#							#
 ############   PADDLE ATRIBUTES     #####################
 
 	l1Ini: .word 0
@@ -191,7 +191,7 @@ nop
 	
 	sw $zero, 0xFFFF0004
 	
-	
+	li $t5, 1 # keep 1 to be used as a infinite looping
 	bne $zero, $t5, loop
 	nop
 	
@@ -494,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 4000, endDelay
+delayLoop:	beq $t1, 999, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -543,22 +543,22 @@ altMvBall:
 	subi $sp, $sp, 4
 	sw $ra, 0($sp)
 	
-	beq $a1, 1, trD 
+	beq $a1, 3, trD 
 	nop
 	
-	beq $a1, 2, qcD
+	beq $a1, 4, qcD
 	nop
 	
-	beq $a1, 3, ssD
+	beq $a1, 5, ssD
 	nop
 	
-	beq $a1, -1, trE
+	beq $a1, 0, trE
 	nop
 	
-	beq $a1, -2, qcE
+	beq $a1, 1, qcE
 	nop
 	
-	beq $a1, -3, ssE
+	beq $a1, 2, ssE
 	nop
 	
 	j AltBallMoved
@@ -609,7 +609,7 @@ altMvBall:
 	bne $s7, $zero, go_qcD #if direction its up
 	nop#is down
 	
-	li $s7, 2 #direction goes to 40 right
+	li $s7, 4 #direction goes to 40 right
 	sw $s7, direction
 	li $s7, 1 
 	sw $s7, upAndDown #sets to go up
@@ -618,10 +618,15 @@ altMvBall:
 	go_qcD:	#is up
 	
 	lw $s3, palletColor
-	li $s7, -2 
+	
+	sw $s7, upAndDown
+	
+	li $s7, 1 
 	sw $s7, direction #sets to goes 40 left
 	
 	subi $s2, $s2, 4
+	jal isPaddleOrTop
+	nop
 	
 	afterPallet:
 	
@@ -631,7 +636,7 @@ altMvBall:
 	jal delDot
 	nop
 	
-	li $s7, -2
+	li $s7, 1
 	sw $s7, direction
 	li $s7, 0
 	sw $s7, upAndDown
@@ -689,10 +694,16 @@ altMvBall:
 	
 	lw $s3, palletColor
 	
-	li $s7, 2
+	sw $s7, upAndDown
+	
+	li $s7, 4
 	sw $s7, direction
-
+	
+	
 	addi $s2, $s2, 4
+	
+	jal isPaddleOrTop
+	nop
 			
 	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
 	nop
@@ -702,7 +713,7 @@ altMvBall:
 	jal delDot
 	nop
 	
-	li $s7, -2
+	li $s7, 1
 	sw $s7, direction
 	li $s7, 0
 	sw $s7, upAndDown
@@ -720,4 +731,47 @@ AltBallMoved:
 	addi $sp, $sp ,4
 	jr $ra
 	nop
+
+isPaddleOrTop:
+	la $t3, 0($gp) #load gp to 
+	addi $t3, $t3, 256 # get first monitor line last pixel
+	sle $t4, $a0, $t3
+	beq $t4, $zero, outOfTop
+		nop
+		not $t4, $t4
+		sw $t4, upAndDown
+		jr $ra
+		nop
+	outOfTop:
+		lw $t3, l2Ini
+		sub $t4, $a0, $t3
+		slt $t4, $t4, $zero
 		
+		beq $t4, $zero, verifyDirPaddle1
+			nop
+			jr $ra
+			nop
+			
+		verifyDirPaddle1:
+		
+		lw $t3, l2End
+		sub $t4, $t3, $a0
+		slt $t4, $t4, $zero
+		
+		beq $t4, $zero, verifyDirPaddle2
+			nop
+			jr $ra
+			nop
+		verifyDirPaddle2:		
+		
+		lw $t3, l2End
+		sub $t4, $t3, $a0
+		div $t4, $t4, 4
+		nop
+		mflo $t4
+		sw $t4, direction
+		jr $ra
+		nop
+		
+		
+
