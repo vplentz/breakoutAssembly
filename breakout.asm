@@ -494,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 999, endDelay
+delayLoop:	beq $t1, 4000, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -533,6 +533,20 @@ surroundings:
 	sw $t1, -4($a0) #stores black into left surrounding
 	sameColor2:jr $ra
 	nop
+#### End game######
+### $a0 ball position ####
+	endGame:
+	la $a2, ($gp) #add base of gp
+	addi $a2, $a2, 16384
+	slt $a1, $a0, $a2 #se posicao da bola for maior que o fim da tela coloca 0
+	beq $a1, $zero, ended #se for igual a 0 acaba o jogo
+	nop
+	jr $ra
+	nop
+	ended:li $v0, 10
+	syscall
+	
+####################
 #### Alternative move ball ########
 # $a0 position #
 # $a1 direction#
@@ -601,6 +615,9 @@ altMvBall:
 	jal drawBall
 	nop
 	
+	jal endGame
+	nop
+	 
 	j AltBallMoved
 	nop
 	
@@ -686,6 +703,8 @@ altMvBall:
 	jal drawBall
 	nop
 
+	jal endGame
+	nop
 	
 	j AltBallMoved
 	nop
