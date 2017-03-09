@@ -595,7 +595,7 @@ altMvBall:
 	keep_qcD:
 	
 	add $s0, $a0, $t9 #get next  dot up/down
-	addi $s0, $s0, 4 #And get dir of up dot
+	addi $s0, $s0, 8 #And get dir of up dot
 	or $s2, $zero, $s0
 	
 	lw $s0, 0($s0) #loads  $s0 with the next color
@@ -606,7 +606,7 @@ altMvBall:
 		
 	move $a1, $a0 #set $a1 to clear position
 	add $a0, $a0, $t9 #set $a0 to draw position
-	addi $a0, $a0, 4
+	addi $a0, $a0, 8
 	
 	sw $a0, position
 	jal delay
@@ -641,7 +641,7 @@ altMvBall:
 	li $s7, 1 
 	sw $s7, direction #sets to goes 40 left
 	
-	subi $s2, $s2, 4
+	subi $s2, $s2, 8
 	jal isPaddleOrTop
 	nop
 	
@@ -666,6 +666,78 @@ altMvBall:
 	nop
 	
 	trE:
+	
+	lw $s7, upAndDown
+	
+	bne $s7, $zero, up_trE
+	nop
+	li $t9, 256
+	j keep_trE
+	nop
+	up_trE:
+	li $t9, -256
+	keep_trE:
+	add $s0, $a0, $t9 #get next up dot
+	subi $s0, $s0, 12 #And get dir of up dot
+	or $s2, $zero, $s0
+	
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	
+	
+	bne $s0, $s1,  fim_trE #if next dot != black
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	add $a0, $a0, $t9 #set $a0 to draw position
+	subi $a0, $a0, 12
+	
+	sw $a0, position
+	jal delay
+	nop
+	
+	jal drawBall
+	nop
+
+	jal endGame
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	fim_trE: #next != black
+	
+	lw $s3, palletColor
+	
+	sw $s7, upAndDown
+	
+	li $s7, 0
+	sw $s7, direction
+	
+	
+	addi $s2, $s2, 12
+	
+	jal isPaddleOrTop
+	nop
+			
+	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
+	nop
+	
+
+	
+	jal delDot
+	nop
+	
+	li $s7, 3
+	sw $s7, direction
+	li $s7, 0
+	sw $s7, upAndDown
+	
+	
+	j AltBallMoved
+	nop
+	
 	nop
 	
 	qcE:
@@ -681,7 +753,7 @@ altMvBall:
 	li $t9, -256
 	keep_qcE:
 	add $s0, $a0, $t9 #get next up dot
-	subi $s0, $s0, 4 #And get dir of up dot
+	subi $s0, $s0, 8 #And get dir of up dot
 	or $s2, $zero, $s0
 	
 	lw $s0, 0($s0)
@@ -694,7 +766,7 @@ altMvBall:
 		
 	move $a1, $a0 #set $a1 to clear position
 	add $a0, $a0, $t9 #set $a0 to draw position
-	subi $a0, $a0, 4
+	subi $a0, $a0, 8
 	
 	sw $a0, position
 	jal delay
@@ -719,7 +791,7 @@ altMvBall:
 	sw $s7, direction
 	
 	
-	addi $s2, $s2, 4
+	addi $s2, $s2, 8
 	
 	jal isPaddleOrTop
 	nop
@@ -742,6 +814,78 @@ altMvBall:
 	nop
 	
 	ssE:
+	
+	lw $s7, upAndDown
+	
+	bne $s7, $zero, up_ssE
+	nop
+	li $t9, 256
+	j keep_ssE
+	nop
+	up_ssE:
+	li $t9, -256
+	keep_ssE:
+	add $s0, $a0, $t9 #get next up dot
+	subi $s0, $s0, 4 #And get dir of up dot
+	or $s2, $zero, $s0
+	
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	
+	
+	bne $s0, $s1,  fim_ssE #if next dot != black
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	add $a0, $a0, $t9 #set $a0 to draw position
+	subi $a0, $a0, 4
+	
+	sw $a0, position
+	jal delay
+	nop
+	
+	jal drawBall
+	nop
+
+	jal endGame
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	fim_ssE: #next != black
+	
+	lw $s3, palletColor
+	
+	sw $s7, upAndDown
+	
+	li $s7, 2
+	sw $s7, direction
+	
+	
+	addi $s2, $s2, 4
+	
+	jal isPaddleOrTop
+	nop
+			
+	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
+	nop
+	
+
+	
+	jal delDot
+	nop
+	
+	li $s7, 5
+	sw $s7, direction
+	li $s7, 0
+	sw $s7, upAndDown
+	
+	
+	j AltBallMoved
+	nop
+	
 	nop
 	
 	
