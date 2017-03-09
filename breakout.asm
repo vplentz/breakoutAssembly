@@ -494,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 4000, endDelay
+delayLoop:	beq $t1, 10000, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -586,23 +586,24 @@ altMvBall:
 	
 	lw $s7, upAndDown
 	
-	bne $s7, $zero, up_qcD #upward
+	bne $s7, $zero, up_qcD
 	nop
-	li $t9, 256 #down
-	j keep_qcD 
+	li $t9, 256
+	j keep_qcD
 	nop
 	up_qcD:
-	li $t9, -256 # up
+	li $t9, -256
 	keep_qcD:
-	
-	add $s0, $a0, $t9 #get next  dot up/down
+	add $s0, $a0, $t9 #get next up dot
 	addi $s0, $s0, 4 #And get dir of up dot
 	or $s2, $zero, $s0
 	
-	lw $s0, 0($s0) #loads  $s0 with the next color
+	lw $s0, 0($s0)
 	lw $s1, backgroundColor
 	
-	bne $s0, $s1,  fim_qcD # if $s0 color its not black
+	
+	
+	bne $s0, $s1,  fim_qcD #if next dot != black
 	nop
 		
 	move $a1, $a0 #set $a1 to clear position
@@ -615,37 +616,25 @@ altMvBall:
 	
 	jal drawBall
 	nop
-	
+
 	jal endGame
 	nop
-	 
+	
 	j AltBallMoved
 	nop
 	
-	fim_qcD: #color is not black
-	
-	bne $s7, $zero, go_qcD #if direction its up
-	nop#is down
-	
-	li $s7, 4 #direction goes to 40 right
-	sw $s7, direction
-	li $s7, 1 
-	sw $s7, upAndDown #sets to go up
-	j afterPallet
-	nop
-	go_qcD:	#is up
+	fim_qcD: #next != black
 	
 	lw $s3, palletColor
 	
-	subi $s2, $s2, 4
-	li $s7 , 1
+	li $s7, 1
 	jal isPaddleOrTop
 	nop
-	
-	afterPallet:
-	
-	beq $s0,  $s3, AltBallMoved #if next  dot up/down == palletColor
+			
+	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
 	nop
+	
+
 	
 	jal delDot
 	nop
