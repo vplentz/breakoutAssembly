@@ -579,8 +579,9 @@ altMvBall:
 	nop
 	
 	trD:
+	j AltBallMoved
 	nop
-	
+
 	qcD:
 	
 	lw $s7, upAndDown
@@ -636,12 +637,8 @@ altMvBall:
 	
 	lw $s3, palletColor
 	
-	sw $s7, upAndDown
-	
-	li $s7, 1 
-	sw $s7, direction #sets to goes 40 left
-	
 	subi $s2, $s2, 4
+	li $s7 , 1
 	jal isPaddleOrTop
 	nop
 	
@@ -663,82 +660,13 @@ altMvBall:
 	nop
 	
 	ssD:
+	j AltBallMoved
 	nop
 	
 	trE:
-	
-	lw $s7, upAndDown
-	
-	bne $s7, $zero, up_trE
-	nop
-	li $t9, 256
-	j keep_trE
-	nop
-	up_trE:
-	li $t9, -256
-	keep_trE:
-	add $s0, $a0, $t9 #get next up dot
-	subi $s0, $s0, 12 #And get dir of up dot
-	or $s2, $zero, $s0
-	
-	lw $s0, 0($s0)
-	lw $s1, backgroundColor
-	
-	
-	
-	bne $s0, $s1,  fim_trE #if next dot != black
-	nop
-		
-	move $a1, $a0 #set $a1 to clear position
-	add $a0, $a0, $t9 #set $a0 to draw position
-	subi $a0, $a0, 12
-	
-	sw $a0, position
-	jal delay
-	nop
-	
-	jal drawBall
-	nop
-
-	jal endGame
-	nop
-	
 	j AltBallMoved
 	nop
-	
-	fim_trE: #next != black
-	
-	lw $s3, palletColor
-	
-	sw $s7, upAndDown
-	
-	li $s7, 0
-	sw $s7, direction
-	
-	
-	addi $s2, $s2, 12
-	
-	jal isPaddleOrTop
-	nop
-			
-	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
-	nop
-	
 
-	
-	jal delDot
-	nop
-	
-	li $s7, 3
-	sw $s7, direction
-	li $s7, 0
-	sw $s7, upAndDown
-	
-	
-	j AltBallMoved
-	nop
-	
-	nop
 	
 	qcE:
 	
@@ -784,15 +712,9 @@ altMvBall:
 	fim_qcE: #next != black
 	
 	lw $s3, palletColor
-	
-	sw $s7, upAndDown
-	
-	li $s7, 4
-	sw $s7, direction
-	
-	
 	addi $s2, $s2, 4
 	
+	li $s7, 4
 	jal isPaddleOrTop
 	nop
 			
@@ -814,79 +736,9 @@ altMvBall:
 	nop
 	
 	ssE:
-	
-	lw $s7, upAndDown
-	
-	bne $s7, $zero, up_ssE
-	nop
-	li $t9, 256
-	j keep_ssE
-	nop
-	up_ssE:
-	li $t9, -256
-	keep_ssE:
-	add $s0, $a0, $t9 #get next up dot
-	subi $s0, $s0, 4 #And get dir of up dot
-	or $s2, $zero, $s0
-	
-	lw $s0, 0($s0)
-	lw $s1, backgroundColor
-	
-	
-	
-	bne $s0, $s1,  fim_ssE #if next dot != black
-	nop
-		
-	move $a1, $a0 #set $a1 to clear position
-	add $a0, $a0, $t9 #set $a0 to draw position
-	subi $a0, $a0, 4
-	
-	sw $a0, position
-	jal delay
-	nop
-	
-	jal drawBall
-	nop
-
-	jal endGame
-	nop
-	
 	j AltBallMoved
 	nop
-	
-	fim_ssE: #next != black
-	
-	lw $s3, palletColor
-	
-	sw $s7, upAndDown
-	
-	li $s7, 2
-	sw $s7, direction
-	
-	
-	addi $s2, $s2, 4
-	
-	jal isPaddleOrTop
-	nop
-			
-	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
-	nop
-	
 
-	
-	jal delDot
-	nop
-	
-	li $s7, 5
-	sw $s7, direction
-	li $s7, 0
-	sw $s7, upAndDown
-	
-	
-	j AltBallMoved
-	nop
-	
-	nop
 	
 	
 AltBallMoved:
@@ -894,44 +746,47 @@ AltBallMoved:
 	addi $sp, $sp ,4
 	jr $ra
 	nop
-
+###### $a0 ball position ########
+###### $s7 next direction ######## 
 isPaddleOrTop:
 	la $t3, 0($gp) #load gp to 
 	addi $t3, $t3, 256 # get first monitor line last pixel
 	sle $t4, $a0, $t3
-	beq $t4, $zero, outOfTop
+	beq $t4, $zero, outOfTop #se nao estiver no topo
 		nop
-		not $t4, $t4
+		not $t4, $t4 #não um é zero
 		sw $t4, upAndDown
 		jr $ra
 		nop
 	outOfTop:
-		lw $t3, l2Ini
-		sub $t4, $a0, $t3
-		slt $t4, $t4, $zero
-		
+		lw $t3, l2Ini #inicio da barra
+		sub $t4, $a0, $t3 #$t4 <0
+		slt $t4, $t4, $zero 	
 		beq $t4, $zero, verifyDirPaddle1
 			nop
+			sw $s7, direction
 			jr $ra
 			nop
 			
 		verifyDirPaddle1:
 		
-		lw $t3, l2End
-		sub $t4, $t3, $a0
+		lw $t3, l2End #final da barra
+		sub $t4, $t3, $a0 #$t4 = finalbarra - posiçao bola
 		slt $t4, $t4, $zero
 		
 		beq $t4, $zero, verifyDirPaddle2
 			nop
+			sw $s7, direction
 			jr $ra
 			nop
 		verifyDirPaddle2:		
 		
-		lw $t3, l2End
-		sub $t4, $t3, $a0
+		lw $t3, l2Ini
+		sub $t4, $a0, $t3
 		div $t4, $t4, 4
 		nop
-		mflo $t4
+		li $s7, 1
+		sw $s7, upAndDown
 		sw $t4, direction
 		jr $ra
 		nop
