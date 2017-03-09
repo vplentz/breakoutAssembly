@@ -595,7 +595,7 @@ altMvBall:
 	keep_qcD:
 	
 	add $s0, $a0, $t9 #get next  dot up/down
-	addi $s0, $s0, 8 #And get dir of up dot
+	addi $s0, $s0, 4 #And get dir of up dot
 	or $s2, $zero, $s0
 	
 	lw $s0, 0($s0) #loads  $s0 with the next color
@@ -606,7 +606,7 @@ altMvBall:
 		
 	move $a1, $a0 #set $a1 to clear position
 	add $a0, $a0, $t9 #set $a0 to draw position
-	addi $a0, $a0, 8
+	addi $a0, $a0, 4
 	
 	sw $a0, position
 	jal delay
@@ -641,7 +641,7 @@ altMvBall:
 	li $s7, 1 
 	sw $s7, direction #sets to goes 40 left
 	
-	subi $s2, $s2, 8
+	subi $s2, $s2, 4
 	jal isPaddleOrTop
 	nop
 	
@@ -753,7 +753,7 @@ altMvBall:
 	li $t9, -256
 	keep_qcE:
 	add $s0, $a0, $t9 #get next up dot
-	subi $s0, $s0, 8 #And get dir of up dot
+	subi $s0, $s0, 4 #And get dir of up dot
 	or $s2, $zero, $s0
 	
 	lw $s0, 0($s0)
@@ -766,7 +766,7 @@ altMvBall:
 		
 	move $a1, $a0 #set $a1 to clear position
 	add $a0, $a0, $t9 #set $a0 to draw position
-	subi $a0, $a0, 8
+	subi $a0, $a0, 4
 	
 	sw $a0, position
 	jal delay
@@ -791,7 +791,7 @@ altMvBall:
 	sw $s7, direction
 	
 	
-	addi $s2, $s2, 8
+	addi $s2, $s2, 4
 	
 	jal isPaddleOrTop
 	nop
