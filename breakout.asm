@@ -494,7 +494,7 @@ ballMoved:
 			
 ############## DELAY#######
 delay: 	li $t1, 0
-delayLoop:	beq $t1, 10000, endDelay
+delayLoop:	beq $t1, 200, endDelay
 		nop
 		addi $t1, $t1, 1
 		j delayLoop
@@ -775,6 +775,7 @@ altMvBall:
 	j AltBallMoved
 	nop
 	
+	
 ############################ 30 E ############################
 	trE:
 	
@@ -985,11 +986,20 @@ AltBallMoved:
 isPaddleOrTop:
 	la $t3, 0($gp) #load gp to 
 	addi $t3, $t3, 256 # get first monitor line last pixel
+	lw $t9, upAndDown
+	bne $t9, $zero, up_Pad
+	nop
 	addi $s3, $a0, 256
+	j keep_Pad
+	nop
+	up_Pad:
+	addi $s3, $a0, -256
+	keep_Pad:
 	sle $t4, $s3, $t3
+	nop
 	beq $t4, $zero, outOfTop #se nao estiver no topo
 		nop
-		not $t4, $t4 #não um é zero
+		li $t4, 0 #não um é zero
 		sw $t4, upAndDown
 		jr $ra
 		nop
