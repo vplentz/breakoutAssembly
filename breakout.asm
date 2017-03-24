@@ -14,8 +14,17 @@
 	barY:		.word 31			#
 	#maxPixels:	.word 2944			#
 	maxPixels:	.word 4096
-	delayMessage: 	.asciiz "Select level: 1(easy), 2(medium), 3(hard)."
+	delayMessage: 	.asciiz "Select level:\n 1(easy)\n 2(medium)\n 3(hard)\n"
+	menuMessage: 	.asciiz "Select option:\n 1(Play)\n 2(Scores)\n 3(Exit)\n"
+	scores:         .asciiz "log.txt"
+	buffer:         .asciiz "Falha ao ler arquivo log.txt" #espaco relativo a 256 x 256    
+	gameOver:	.asciiz "GAME OVER \n Sua Pontuação foi: "
+	typeName:       .asciiz "Digite seu nick para registrar o score:"
+	ranking:        .asciiz "O log de points eh:\n"                                                                                                                                           "
 	dlay:		.word 4000			#
+	
+	point:		.word 0
+	
 ########### Frame Properities  ##########################
 							#
 	backgroundColor:.word	0x000000   # black 	#
@@ -37,7 +46,7 @@
 	position: .word 16000 	  # change over time	#
 	direction: .word 4	  # up			#
 	upAndDown: .word 1				#
-	paddleColision: .word 0				#							#
+	paddleColision: .word 0				#							
 ############   PADDLE ATRIBUTES     #####################
 
 	l1Ini: .word 0
@@ -51,9 +60,33 @@
 .text
 	.globl main
 	main:
+	sw $zero, point
+	###### Menu ##############
+	li $v0, 51
+	la $a0, menuMessage
+	syscall
+	
+	beq $a0, 3, exit
+	nop
+	
+	beq $a0, 1, play
+	nop
+	
+	beq $a0, 2, getScores
+	nop
+	
+	
+	
+	
+	
+	
+	################ Level of game #####################
+	play:
+	
 	li $v0, 51
 	la $a0, delayMessage
 	syscall
+	
 	bne $a1, 0, outOfGame
 	nop
 		#set delay
@@ -64,6 +97,7 @@
 		beq $a0, 3, hard
 		nop
 		j outOfGame
+		nop
 	easy: li $a0, 12000
 		sw $a0, dlay
 		j endDialog
@@ -76,10 +110,11 @@
 		sw $a0, dlay
 		j endDialog
 		nop
-	outOfGame: li $v0, 10
-		syscall
+	outOfGame: 
+	li $v0, 10
+	syscall
 	endDialog:
-		 
+	#########################################	 
 		
 	
 ############### Desenha o background ####################
@@ -201,6 +236,10 @@ nop
 	
 	loop:
 	
+	
+	
+	
+	
 	lw $a0, position
 	lw $a1, direction
 	
@@ -230,7 +269,7 @@ nop
 	
 	
 ########## Syscall to finish program before enter in the jal functions #########
-									      #
+	exit:								      #
 	li $v0, 10							     #
 	syscall								    #
 									   #
@@ -538,6 +577,9 @@ endDelay: 	jr $ra
 #### $s2 current dot address###
 #### $s1 black##########
 delDot:
+	lw $a0, point
+	addi $a0, $a0, 10
+	sw $a0, point
 	subi $sp, $sp, 4
 	sw $ra, 0($sp) #saving the current adress
 	move $a0, $s2 #set surroundings argument
@@ -596,8 +638,24 @@ surroundings:
 	nop
 	jr $ra
 	nop
-	ended:li $v0, 10
+	ended:
+	li $v0, 56
+	la $a0, gameOver
+	lw $a1, point 
 	syscall
+	
+	
+	li $v0, 54
+	la $a0, typeName
+	la $a1, buffer 
+	syscall 
+	
+	
+	j main
+	nop
+	
+	
+	
 	
 ####################
 #### Alternative move ball ########
@@ -616,7 +674,7 @@ altMvBall:
 	beq $a1, 4, qcD
 	nop
 	
-	beq $a1, 3, trD
+	beq $a1, 3, upM
 	nop
 	
 	beq $a1, 0, trE
@@ -625,13 +683,85 @@ altMvBall:
 	beq $a1, 1, qcE
 	nop
 	
-	beq $a1, 2, trE
+	beq $a1, 2, upM
 	nop
 	
 	j AltBallMoved
 	nop
+	
+############################ func to 90 ################################
+
+upM:
+	
+	lw $s7, upAndDown
+	
+	bne $s7, $zero, up_upM
+	nop
+	li $t9, 256
+	j keep_upM
+	nop
+	up_upM:
+	li $t9, -256
+	keep_upM:
+	add $s0, $a0, $t9 #get next up dot
+	or $s2, $zero, $s0
+	
+	lw $s0, 0($s0)
+	lw $s1, backgroundColor
+	
+	
+	
+	bne $s0, $s1,  fim_upM #if next dot != black
+	nop
+		
+	move $a1, $a0 #set $a1 to clear position
+	add $a0, $a0, $t9 #set $a0 to draw position
+	
+	sw $a0, position
+	jal delay
+	nop
+	lw $a0, position
+	jal drawBall
+	nop
+
+	jal endGame
+	nop
+	
+	j AltBallMoved
+	nop
+	
+	fim_upM: #next != black
+	
+
+	
+	li $s7, 2
+	jal isPaddleOrTop
+	nop
+	lw $s3, palletColor	
+	beq $s0,  $s3, AltBallMoved #if next dot == palletColor
+	nop
+	
+
+	
+	jal delDot
+	nop
+	
+	li $s7, 3
+	sw $s7, direction
+	li $s7, 0
+	sw $s7, upAndDown
+	
+	
+	j AltBallMoved
+	nop
+	
+	
+	
+	
 ############################ func 30 D ################################
 	trD:
+	jal delay
+	nop
 	lw $s7, upAndDown
 	
 	bne $s7, $zero, up_trD
@@ -835,7 +965,8 @@ altMvBall:
 	
 ############################ 30 E ############################
 	trE:
-	
+	jal delay
+	nop
 	lw $s7, upAndDown
 	
 	bne $s7, $zero, up_trE
@@ -1098,6 +1229,69 @@ isPaddleOrTop:
 		sw $t4, direction
 		jr $ra
 		nop
-		
-		
+
+getScores:
+ 
+ 	
+# Sample MIPS program that writes to a new file.
+#   by Kenneth Vollmar and Pete Sanderson
+
+        .data
+        .text
+  ###############################################################
+  # Open (for writing) a file that does not exist
+  li   $v0, 13       # system call for open file
+  la   $a0, scores     # output file name
+  li   $a1, 1        # Open for writing (flags are 0: read, 1: write)
+  li   $a2, 0        # mode is ignored
+  syscall            # open a file (file descriptor returned in $v0)
+  move $s6, $v0      # save the file descriptor 
+  ###############################################################
+  # Write to file just opened
+  li   $v0, 15       # system call for write to file
+  move $a0, $s6      # file descriptor 
+  la   $a1, buffer   # address of buffer from which to write
+  li   $a2, 10       # hardcoded buffer length
+  syscall            # write to file
+  ###############################################################
+  # Close the file 
+  li   $v0, 16       # system call for close file
+  move $a0, $s6      # file descriptor to close
+  syscall            # close file
+  ###############################################################
+  li $v0, 59
+  la $a0, ranking
+  la $a1, buffer
+	syscall 
+  
+  j main
+  nop
+	
+setScores:
+
+  ###############################################################
+  # Open (for writing) a file that does not exist
+  li   $v0, 13       # system call for open file
+  la   $a0, scores     # output file name
+  li   $a1, 0        # Open for writing (flags are 0: read, 1: write)
+  li   $a2, 0        # mode is ignored
+  syscall            # open a file (file descriptor returned in $v0)
+  move $s6, $v0      # save the file descriptor 
+  ###############################################################
+  # Write to file just opened
+  li   $v0, 15       # system call for write to file
+  move $a0, $s6      # file descriptor 
+  la   $a1, menuMessage   # address of buffer from which to write
+  li   $a2, 44       # hardcoded buffer length
+  syscall            # write to file
+  ###############################################################
+  # Close the file 
+  li   $v0, 16       # system call for close file
+  move $a0, $s6      # file descriptor to close
+  syscall            # close file
+  ###############################################################
+	j main
+	nop
+
+
 
