@@ -13,7 +13,9 @@
 	barX: 		.word 31			#
 	barY:		.word 31			#
 	#maxPixels:	.word 2944			#
-	maxPixels:	.word 4096			#
+	maxPixels:	.word 4096
+	delayMessage: 	.asciiz "Select level: 1(easy), 2(medium), 3(hard)."
+	dlay:		.word 4000			#
 ########### Frame Properities  ##########################
 							#
 	backgroundColor:.word	0x000000   # black 	#
@@ -43,12 +45,42 @@
 	l2Ini: .word 0
 	l2End: .word 0
 	
-#########################################################
+################    ##############################
 	
 
 .text
 	.globl main
 	main:
+	li $v0, 51
+	la $a0, delayMessage
+	syscall
+	bne $a1, 0, outOfGame
+	nop
+		#set delay
+		beq $a0, 1, easy
+		nop
+		beq $a0, 2, medium
+		nop
+		beq $a0, 3, hard
+		nop
+		j outOfGame
+	easy: li $a0, 75
+		sw $a0, dlay
+		j endDialog
+		nop
+	medium: li $a0, 45
+		sw $a0, dlay
+		j endDialog
+		nop
+	hard: li $a0, 30
+		sw $a0, dlay
+		j endDialog
+		nop
+	outOfGame: li $v0, 10
+		syscall
+	endDialog:
+		 
+		
 	
 ############### Desenha o background ####################
 	lw $a0, screenWidth #carrega a largura da tela
@@ -493,14 +525,11 @@ ballMoved:
 	nop
 			
 ############## DELAY#######
-delay: 	li $t1, 0
-delayLoop:	beq $t1, 200, endDelay
-		nop
-		addi $t1, $t1, 1
-		j delayLoop
-		nop
-endDelay: 	jr $ra
-		nop
+delay: 	lw $a0, dlay
+	li $v0, 32
+	syscall
+ 	jr $ra
+	nop
 
 #### erase func #############
 #### $s2 current dot address###
@@ -609,6 +638,8 @@ altMvBall:
 	jal delay
 	nop
 	
+	lw $a0, position
+	
 	jal drawBall
 	nop
 
@@ -675,7 +706,7 @@ altMvBall:
 	sw $a0, position
 	jal delay
 	nop
-	
+	lw $a0, position
 	jal drawBall
 	nop
 
@@ -740,6 +771,8 @@ altMvBall:
 	sw $a0, position
 	jal delay
 	nop
+	
+	lw $a0, position
 	
 	jal drawBall
 	nop
@@ -809,6 +842,8 @@ altMvBall:
 	jal delay
 	nop
 	
+	lw $a0, position
+	
 	jal drawBall
 	nop
 
@@ -872,6 +907,8 @@ altMvBall:
 	sw $a0, position
 	jal delay
 	nop
+	
+	lw $a0, position
 	
 	jal drawBall
 	nop
@@ -938,6 +975,8 @@ altMvBall:
 	sw $a0, position
 	jal delay
 	nop
+	
+	lw $a0, position
 	
 	jal drawBall
 	nop
