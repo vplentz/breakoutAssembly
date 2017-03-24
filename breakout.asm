@@ -64,15 +64,15 @@
 		beq $a0, 3, hard
 		nop
 		j outOfGame
-	easy: li $a0, 75
+	easy: li $a0, 12000
 		sw $a0, dlay
 		j endDialog
 		nop
-	medium: li $a0, 45
+	medium: li $a0, 8000
 		sw $a0, dlay
 		j endDialog
 		nop
-	hard: li $a0, 30
+	hard: li $a0, 5000
 		sw $a0, dlay
 		j endDialog
 		nop
@@ -525,12 +525,15 @@ ballMoved:
 	nop
 			
 ############## DELAY#######
-delay: 	lw $a0, dlay
-	li $v0, 32
-	syscall
- 	jr $ra
-	nop
-
+delay: 	li $t1, 0
+lw $t2, dlay
+delayLoop:	beq $t1, $t2, endDelay
+		nop
+		addi $t1, $t1, 1
+		j delayLoop
+		nop
+endDelay: 	jr $ra
+		nop
 #### erase func #############
 #### $s2 current dot address###
 #### $s1 black##########
