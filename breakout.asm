@@ -560,7 +560,28 @@ surroundings:
 	sameColor1: beq $t3, $t0, sameColor2
 	nop
 	sw $t1, -4($a0) #stores black into left surrounding
-	sameColor2:jr $ra
+	sameColor2:
+	addi $a0, $a0, -256
+	lw $t2, 4($a0)
+	lw $t3, -4($a0) #load dot surroundings
+	lw $t4, 0($a0)
+	beq $t2, $t0, sameColor3
+	nop
+	sw  $t1, 4($a0) #stores black into right surrounding
+	sameColor3: beq $t3, $t0, sameColor4
+	nop
+	sw $t1, -4($a0) #stores black into top left surrounding
+	sameColor4:
+	beq $t2, $t0, sameColor5
+	nop
+	sw  $t1, 4($a0) #stores black into top right surrounding
+	sameColor5:
+	beq $t4, $t0, sameColor6
+	nop
+	sw  $t1, 0($a0) #stores black into top surrounding
+	sameColor6:
+	addi $a0, $a0, 256
+	jr $ra
 	nop
 #### End game######
 ### $a0 ball position ####
@@ -592,7 +613,7 @@ altMvBall:
 	beq $a1, 4, qcD
 	nop
 	
-	beq $a1, 3, ssD
+	beq $a1, 3, trD
 	nop
 	
 	beq $a1, 0, trE
@@ -601,7 +622,7 @@ altMvBall:
 	beq $a1, 1, qcE
 	nop
 	
-	beq $a1, 2, ssE
+	beq $a1, 2, trE
 	nop
 	
 	j AltBallMoved
