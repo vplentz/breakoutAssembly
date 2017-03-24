@@ -60,6 +60,24 @@
 .text
 	.globl main
 	main:
+############### Desenha o background ####################
+	lw $a0, screenWidth #carrega a largura da tela
+	lw $a1, backgroundColor #carrega a cor do fundo
+	mul $a2, $a0, $a0 #faz o total do numero de pixels da tela 
+	mul $a2, $a2, 4 #endereços 
+	la $a2, ($gp) #add base of gp
+	add $a0, $gp, $zero #contador do loop
+FillBackgroundLoop:
+	
+	beq $a0, $a2, menu #end condition, se a largura da tela for igual 
+	nop
+	sw $a1, 0($a0) #salva cor no background
+	addi $a0, $a0, 4 #incrementa contador
+
+j FillBackgroundLoop
+nop
+
+menu:	
 	sw $zero, point
 	###### Menu ##############
 	li $v0, 51
@@ -117,26 +135,10 @@
 	#########################################	 
 		
 	
-############### Desenha o background ####################
-	lw $a0, screenWidth #carrega a largura da tela
-	lw $a1, backgroundColor #carrega a cor do fundo
-	mul $a2, $a0, $a0 #faz o total do numero de pixels da tela 
-	mul $a2, $a2, 4 #endereços 
-	la $a2, ($gp) #add base of gp
-	add $a0, $gp, $zero #contador do loop
-FillBackgroundLoop:
-	
-	beq $a0, $a2, Init #end condition, se a largura da tela for igual 
-	nop
-	sw $a1, 0($a0) #salva cor no background
-	addi $a0, $a0, 4 #incrementa contador
-
-j FillBackgroundLoop
-nop
-	Init: #fim do desenho background
-	nop
 
 ################ Bricks implementation ##############################
+	
+	
 	
 	la $a0, 0($gp) 
 	lw $t0, palletColor  
@@ -177,6 +179,15 @@ nop
 	la $a0, 0($gp) 
 	lw $t0, blue  
 	li $a1, 448  
+	mul $a1, $a1, 4
+	add $a0, $a0, $a1
+	addi $a1, $a0, 512  
+	jal blueBricks
+	nop
+	
+	la $a0, 0($gp) 
+	lw $t0, backgroundColor  
+	li $a1, 4032  
 	mul $a1, $a1, 4
 	add $a0, $a0, $a1
 	addi $a1, $a0, 512  
@@ -577,6 +588,12 @@ endDelay: 	jr $ra
 #### $s2 current dot address###
 #### $s1 black##########
 delDot:
+	li $v0, 31						               #
+	li $a0, 66 # dont care                                                 #
+	li $a1, 500                                                           #
+	li $a2, 32                                                        #
+	li $a3, 127                                                            #
+	syscall
 	lw $a0, point
 	addi $a0, $a0, 10
 	sw $a0, point
@@ -1087,7 +1104,7 @@ upM:
 	nop
 	
 
-	
+		
 	jal delDot
 	nop
 	
@@ -1170,7 +1187,7 @@ upM:
 
 	
 	
-AltBallMoved:
+AltBallMoved:	
 	lw $ra, 0($sp)
 	addi $sp, $sp ,4
 	jr $ra
@@ -1178,6 +1195,12 @@ AltBallMoved:
 ###### $a0 ball position ########
 ###### $s7 next direction ######## 
 isPaddleOrTop:
+	li $v0, 31						               #                                             #
+	li $a1, 500                                                           #
+	li $a2, 32                                                        #
+	li $a3, 127                                                            #
+	syscall
+	
 	la $t3, 0($gp) #load gp to 
 	addi $t3, $t3, 256 # get first monitor line last pixel
 	lw $t9, upAndDown
@@ -1198,6 +1221,9 @@ isPaddleOrTop:
 		jr $ra
 		nop
 	outOfTop:
+		
+		
+		
 		lw $t3, l2Ini #inicio da barra
 		sub $t4, $s3, $t3 #$t4 <0
 		slt $t4, $t4, $zero 	
